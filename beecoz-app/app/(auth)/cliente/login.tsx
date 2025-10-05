@@ -2,10 +2,10 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { View, Alert } from "react-native";
-import { Screen } from "../../../components/Screen";
-import { TextField } from "../../../components/TextField";
-import { Button } from "../../../components/Button";
-import { BASE_URL } from "../../../lib/api";
+import { Screen } from "@components/Screen";
+import { TextField } from "@components/TextField";
+import Button from "@components/Button";
+import { BASE_URL } from "@lib/api";
 
 export default function LoginCliente() {
   const [email, setEmail] = useState("");
@@ -56,3 +56,4 @@ export default function LoginCliente() {
     </Screen>
   );
 }
+

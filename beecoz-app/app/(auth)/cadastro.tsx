@@ -1,13 +1,11 @@
 ﻿import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { apiRegister } from "../../lib/api";
+import { apiRegister } from "@lib/api";
 
 export default function Cadastro(){
   const [perfil, setPerfil] = useState<"CLIENTE"|"AUTONOMO">("CLIENTE");
-  const [nome, setNome] = useState("");
-  const [login, setLogin] = useState(""); // email ou telefone
-  const [senha, setSenha] = useState("");
+  const [nome, setNome] = useState(""); const [login, setLogin] = useState(""); const [senha, setSenha] = useState("");
 
   async function cadastrar(){
     try{
@@ -39,3 +37,4 @@ export default function Cadastro(){
 const s = StyleSheet.create({ c:{flex:1,padding:24,gap:12,justifyContent:"center"}, h1:{fontSize:24,fontWeight:"800",marginBottom:8},
   in:{borderWidth:1,borderColor:"#ddd",borderRadius:12,padding:12}, chip:{paddingHorizontal:10,paddingVertical:6,borderRadius:8,backgroundColor:"#eee"},
   active:{backgroundColor:"#cde"}, btn:{backgroundColor:"#0057e7",padding:14,borderRadius:12,alignItems:"center"}, btnt:{color:"#fff",fontWeight:"700"} });
+

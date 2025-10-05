@@ -1,5 +1,5 @@
 ﻿import { View, Text } from "react-native";
-import { THEME } from "../lib/theme";
+import { THEME } from "@lib/theme";
 import { Link } from "expo-router";
 import { Button } from "./Button";
 
@@ -25,3 +25,4 @@ export function RoleSection({
     </View>
   );
 }
+

@@ -1,7 +1,7 @@
 ﻿import { useState } from "react";
 import { View, Text, TextInput, FlatList } from "react-native";
-import { Screen } from "../components/Screen";
-import { Button } from "../components/Button";
+import { Screen } from "@components/Screen";
+import { Button } from "@components/Button";
 
 type Msg = { id: string; from: "eu" | "outro"; text: string };
 
@@ -50,3 +50,4 @@ export default function ChatInterno() {
     </Screen>
   );
 }
+

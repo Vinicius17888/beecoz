@@ -1,20 +1,19 @@
 ﻿import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { Link, router } from "expo-router";
-import { apiLogin } from "../../lib/api";
-import { useAuth } from "../../lib/authStore";
+import { apiLogin } from "@lib/api";
+import { useAuth } from "@lib/authStore";
 
-export default function Login() {
-  const [login, setLogin] = useState("");
-  const [senha, setSenha] = useState("");
-  const setAuth = useAuth((s) => s.setAuth);
+export default function Login(){
+  const [login, setLogin] = useState(""); const [senha, setSenha] = useState("");
+  const setAuth = useAuth(s=>s.setAuth);
 
-  async function entrar() {
-    try {
+  async function entrar(){
+    try{
       const auth = await apiLogin(login, senha);
-      setAuth(auth);
+      await setAuth(auth);
       router.replace(auth.perfil === "CLIENTE" ? "/(cliente)" : "/(autonomo)");
-    } catch (e:any) {
+    }catch(e:any){
       Alert.alert("Erro", e?.response?.data?.error ?? "Falha no login");
     }
   }
@@ -32,3 +31,4 @@ export default function Login() {
 const s = StyleSheet.create({ c:{flex:1,padding:24,justifyContent:"center",gap:12}, h1:{fontSize:28,fontWeight:"800",textAlign:"center"},
   in:{borderWidth:1,borderColor:"#ddd",borderRadius:12,padding:12}, btn:{backgroundColor:"#0057e7",padding:14,borderRadius:12,alignItems:"center"},
   btnt:{color:"#fff",fontWeight:"700"} });
+
