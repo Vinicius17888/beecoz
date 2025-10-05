@@ -1,6 +1,6 @@
 ﻿import { View, Text } from "react-native";
-import { Screen } from "../../components/Screen";
-import { Button } from "../../components/Button";
+import { Screen } from "@components/Screen";
+import { Button } from "@components/Button";
 import { router } from "expo-router";
 
 export default function PerfilPrestador() {
@@ -13,3 +13,4 @@ export default function PerfilPrestador() {
     </Screen>
   );
 }
+

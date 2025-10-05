@@ -1,6 +1,6 @@
 ﻿import { View } from "react-native";
-import { Screen } from "../../components/Screen";
-import { RoleSection } from "../../components/RoleSection";
+import { Screen } from "@components/Screen";
+import { RoleSection } from "@components/RoleSection";
 
 export default function LoginECadastro() {
   return (
@@ -20,3 +20,4 @@ export default function LoginECadastro() {
     </Screen>
   );
 }
+

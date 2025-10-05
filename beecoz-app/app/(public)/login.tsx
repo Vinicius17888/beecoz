@@ -2,7 +2,7 @@
 import { View, Text, TextInput, TouchableOpacity, Switch, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { BASE_URL } from "../../lib/api";
+import { BASE_URL } from "@lib/api";
 
 const C = {
   bg: "#2E3137",
@@ -102,3 +102,4 @@ export default function Login() {
     </KeyboardAvoidingView>
   );
 }
+

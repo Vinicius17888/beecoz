@@ -3,7 +3,7 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { BASE_URL } from "../../../lib/api";
+import { BASE_URL } from "@lib/api";
 
 const C = {
   bg: "#2E3137",
@@ -251,3 +251,4 @@ function DocCard({ title, onAdd }: { title: string; onAdd: () => void }) {
     </View>
   );
 }
+

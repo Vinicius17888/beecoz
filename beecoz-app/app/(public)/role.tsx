@@ -1,7 +1,7 @@
 ﻿// app/(public)/role.tsx
 import { View } from "react-native";
-import { Screen } from "../../components/Screen";
-import { RoleSection } from "../../components/RoleSection";
+import { Screen } from "@components/Screen";
+import { RoleSection } from "@components/RoleSection";
 
 // Esta tela corresponde à "Tela de Login e Cadastro" da documentação
 export default function LoginECadastro() {
@@ -22,3 +22,4 @@ export default function LoginECadastro() {
     </Screen>
   );
 }
+
