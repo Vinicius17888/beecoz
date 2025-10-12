@@ -1,5 +1,5 @@
 ﻿import axios from "axios";
-export const BASE_URL = "http://192.168.3.11:3333";
+export const BASE_URL = "https://beecoz.onrender.com";
 export const API = axios.create({ baseURL: BASE_URL });
 
 export type Perfil = "CLIENTE" | "AUTONOMO";
