@@ -3,16 +3,14 @@
   return {
     presets: ["babel-preset-expo"],
     plugins: [
-      "expo-router/babel",
-      [
-        "module-resolver",
-        {
-          alias: {
-            "@components": "./app/components",
-            "@lib": "./app/lib",
-          },
-        },
-      ],
-    ],
+      ["module-resolver", {
+        alias: {
+          "@components": "./app/components",
+          "@lib": "./app/lib",
+          "@theme": "./app/theme",
+          "@assets": "./assets"            // <<-- novo alias
+        }
+      }]
+    ]
   };
 };

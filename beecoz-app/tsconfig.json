@@ -3,7 +3,15 @@
     "baseUrl": ".",
     "paths": {
       "@components/*": ["app/components/*"],
-      "@lib/*": ["app/lib/*"]
+      "@lib/*": ["app/lib/*"],
+      "@theme": ["app/theme/index"],
+      "@theme/*": ["app/theme/*"],
+      "@assets/*": ["assets/*"]          // <<-- ajuda no autocomplete
     }
-  }
+  },
+  "extends": "expo/tsconfig.base",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }

@@ -1,16 +1,14 @@
-﻿import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+﻿import { theme } from "@theme";
+import { TouchableOpacity, Text, StyleSheet, TouchableOpacityProps } from "react-native";
 
-function Button({ title, onPress, style }: { title:string; onPress?:()=>void; style?:ViewStyle }) {
+export default function Button({ children, style, ...rest }: TouchableOpacityProps & { children: React.ReactNode }) {
   return (
-    <TouchableOpacity style={[s.btn, style]} onPress={onPress} activeOpacity={0.8}>
-      <Text style={s.txt}>{title}</Text>
+    <TouchableOpacity style={[s.btn, style]} activeOpacity={0.9} {...rest}>
+      <Text style={s.txt}>{children}</Text>
     </TouchableOpacity>
   );
 }
 const s = StyleSheet.create({
-  btn:{ backgroundColor: "#FBC02D", paddingVertical:14, borderRadius:12, alignItems:"center" },
-  txt:{ fontWeight:"800" }
+  btn: { backgroundColor: theme.colors.primary, paddingVertical: 14, borderRadius: theme.radius.md, alignItems: "center" },
+  txt: { color: theme.colors.bg, fontWeight: "700" }
 });
-export { Button };
-export default Button;
-

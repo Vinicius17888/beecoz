@@ -1,6 +1,6 @@
 {
   "expo": {
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true }
+    "name": "beecoz",
+    "slug": "beecoz"
   }
 }
