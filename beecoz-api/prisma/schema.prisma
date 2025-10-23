@@ -1,12 +1,9 @@
-// -- PRISMA SCHEMA --
-// Observação importante: NADA de ponto-e-vírgula aqui. Cada argumento em sua própria linha.
-
+// Prisma + Neon (PostgreSQL)
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL") // USO normal da API (pool)
-  directUrl = env("DIRECT_URL")   // USO pelo Prisma Migrate (conexão direta)
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
-
 
 generator client {
   provider = "prisma-client-js"
@@ -18,15 +15,23 @@ enum Perfil {
 }
 
 model Login {
-  id         Int      @id @default(autoincrement())
-  email      String?  @unique
-  telefone   String?  @unique
-  senhaHash  String
-  perfil     Perfil
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  Cliente    Cliente?
-  Autonomo   Autonomo?
+  id             Int              @id @default(autoincrement())
+  email          String?          @unique
+  telefone       String?          @unique
+  senhaHash      String
+  perfil         Perfil
+
+  // NOVOS CAMPOS PARA BLOQUEIO / TENTATIVAS
+  failedAttempts Int              @default(0)
+  lockUntil      DateTime?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relações
+  Cliente        Cliente?
+  Autonomo       Autonomo?
+  PasswordResets PasswordReset[]  // 1:N resets
 }
 
 model Cliente {
@@ -44,4 +49,18 @@ model Autonomo {
   area      String?
   nivel     Int     @default(1)
   Login     Login   @relation(fields: [loginId], references: [id], onDelete: Cascade)
+}
+
+// NOVO MODELO PARA RESET DE SENHA
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  loginId   Int
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  login     Login     @relation(fields: [loginId], references: [id], onDelete: Cascade)
+
+  @@index([loginId])
 }
