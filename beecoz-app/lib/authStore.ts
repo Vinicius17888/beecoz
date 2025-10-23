@@ -1,33 +1,36 @@
 ﻿import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Perfil } from "./api";
 
 type State = {
-  token?: string;
-  userId?: number;
-  perfil?: Perfil;
   hydrated: boolean;
-  setAuth: (p: { token: string; userId: number; perfil: Perfil }) => Promise<void>;
-  logout: () => Promise<void>;
-  _hydrate: () => Promise<void>;
+  token: string | null;
+  userId: number | null;
+  perfil: Perfil | null;
 };
 
-export const useAuth = create<State>((set, get) => ({
-  token: undefined, userId: undefined, perfil: undefined, hydrated: false,
-  setAuth: async (p) => {
-    await AsyncStorage.setItem("@auth", JSON.stringify(p));
-    set({ ...p });
-  },
-  logout: async () => {
-    await AsyncStorage.removeItem("@auth");
-    set({ token: undefined, userId: undefined, perfil: undefined });
-  },
-  _hydrate: async () => {
-    try {
-      const raw = await AsyncStorage.getItem("@auth");
-      if (raw) set(JSON.parse(raw));
-    } finally {
-      set({ hydrated: true });
+type Actions = {
+  setSession: (token: string, userId: number, perfil: Perfil) => void;
+  clear: () => void;
+  setHydrated: (v: boolean) => void;
+};
+
+export const useAuth = create<State & Actions>()(
+  persist(
+    (set) => ({
+      hydrated: false,
+      token: null,
+      userId: null,
+      perfil: null,
+      setSession: (token, userId, perfil) => set({ token, userId, perfil }),
+      clear: () => set({ token: null, userId: null, perfil: null }),
+      setHydrated: (v) => set({ hydrated: v }),
+    }),
+    {
+      name: "beecoz-auth",
+      storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => state?.setHydrated(true),
     }
-  }
-}));
+  )
+);

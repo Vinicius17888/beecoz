@@ -1,7 +1,12 @@
+// -- PRISMA SCHEMA --
+// Observação importante: NADA de ponto-e-vírgula aqui. Cada argumento em sua própria linha.
+
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // USO normal da API (pool)
+  directUrl = env("DIRECT_URL")   // USO pelo Prisma Migrate (conexão direta)
 }
+
 
 generator client {
   provider = "prisma-client-js"
@@ -13,42 +18,30 @@ enum Perfil {
 }
 
 model Login {
-  id             Int       @id @default(autoincrement())
-  email          String?   @unique
-  telefone       String?   @unique
-  senhaHash      String
-  perfil         Perfil
-  failedAttempts Int       @default(0)
-  lockUntil      DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  cliente        Cliente?
-  autonomo       Autonomo?
-  resets         PasswordReset[]
-}
-
-model PasswordReset {
-  id        Int      @id @default(autoincrement())
-  loginId   Int
-  tokenHash String
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  Login     Login    @relation(fields: [loginId], references: [id])
+  id         Int      @id @default(autoincrement())
+  email      String?  @unique
+  telefone   String?  @unique
+  senhaHash  String
+  perfil     Perfil
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Cliente    Cliente?
+  Autonomo   Autonomo?
 }
 
 model Cliente {
-  id        Int    @id @default(autoincrement())
-  loginId   Int    @unique
+  id        Int     @id @default(autoincrement())
+  loginId   Int     @unique
   nome      String
   genero    String?
-  Login     Login  @relation(fields: [loginId], references: [id])
+  Login     Login   @relation(fields: [loginId], references: [id], onDelete: Cascade)
 }
 
 model Autonomo {
-  id        Int    @id @default(autoincrement())
-  loginId   Int    @unique
+  id        Int     @id @default(autoincrement())
+  loginId   Int     @unique
   nome      String
   area      String?
-  nivel     Int    @default(1)
-  Login     Login  @relation(fields: [loginId], references: [id])
+  nivel     Int     @default(1)
+  Login     Login   @relation(fields: [loginId], references: [id], onDelete: Cascade)
 }

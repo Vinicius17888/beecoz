@@ -1,34 +1,46 @@
-﻿import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
-import { Link, router } from "expo-router";
-import { apiLogin } from "@lib/api";
-import { useAuth } from "@lib/authStore";
+﻿import { useState } from "react";
+import { View, TextInput, Text, Alert } from "react-native";
+import Button from "../components/Button";
+import { apiLogin } from "../lib/api";
+import { useAuth } from "../lib/authStore";
+import { useRouter } from "expo-router";
 
-export default function Login(){
-  const [login, setLogin] = useState(""); const [senha, setSenha] = useState("");
-  const setAuth = useAuth(s=>s.setAuth);
+export default function Login() {
+  const [login, setLogin] = useState("");   // email OU telefone
+  const [senha, setSenha] = useState("");
+  const { setSession } = useAuth();
+  const router = useRouter();
 
-  async function entrar(){
-    try{
-      const auth = await apiLogin(login, senha);
-      await setAuth(auth);
-      router.replace(auth.perfil === "CLIENTE" ? "/(cliente)" : "/(autonomo)");
-    }catch(e:any){
-      Alert.alert("Erro", e?.response?.data?.error ?? "Falha no login");
+  async function onSubmit() {
+    try {
+      const res = await apiLogin(login, senha);
+      setSession(res.token, res.userId, res.perfil);
+      router.replace(res.perfil === "CLIENTE" ? "/(cliente)" : "/(autonomo)");
+    } catch (e: any) {
+      Alert.alert("Erro", e?.response?.data?.message || "Falha no login");
     }
   }
 
   return (
-    <View style={s.c}>
-      <Text style={s.h1}>BEECOZ</Text>
-      <TextInput placeholder="Email ou telefone" value={login} onChangeText={setLogin} autoCapitalize="none" style={s.in}/>
-      <TextInput placeholder="Senha" value={senha} onChangeText={setSenha} secureTextEntry style={s.in}/>
-      <TouchableOpacity style={s.btn} onPress={entrar}><Text style={s.btnt}>Entrar</Text></TouchableOpacity>
-      <Link href="/(auth)/cadastro" style={{marginTop:8}}>Criar conta</Link>
+    <View style={{ flex:1, padding:20, justifyContent:"center", gap:12 }}>
+      <Text style={{ fontSize:22, fontWeight:"700", marginBottom:8 }}>Entrar</Text>
+      <TextInput
+        placeholder="Email ou telefone"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        style={{ borderWidth:1, borderColor:"#ccc", borderRadius:8, padding:12 }}
+        value={login}
+        onChangeText={setLogin}
+      />
+      <TextInput
+        placeholder="Senha"
+        secureTextEntry
+        style={{ borderWidth:1, borderColor:"#ccc", borderRadius:8, padding:12 }}
+        value={senha}
+        onChangeText={setSenha}
+      />
+      <Button onPress={onSubmit}>Entrar</Button>
+      <Text style={{ color:"#666", marginTop:8 }}>Ainda não tem conta? Faça seu cadastro na próxima tela.</Text>
     </View>
   );
 }
-const s = StyleSheet.create({ c:{flex:1,padding:24,justifyContent:"center",gap:12}, h1:{fontSize:28,fontWeight:"800",textAlign:"center"},
-  in:{borderWidth:1,borderColor:"#ddd",borderRadius:12,padding:12}, btn:{backgroundColor:"#0057e7",padding:14,borderRadius:12,alignItems:"center"},
-  btnt:{color:"#fff",fontWeight:"700"} });
-

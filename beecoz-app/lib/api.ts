@@ -1,24 +1,20 @@
 ﻿import axios from "axios";
-import { useAuth } from "../app/components/../components/../../lib/authStore"; // (se você tiver authStore fora, pode remover esta linha)
-
-export const BASE_URL = "http://192.168.3.11:3333";
-export const API = axios.create({ baseURL: BASE_URL });
-
-API.interceptors.request.use(cfg => {
-  const anyAuth: any = (useAuth as any)?.getState?.();
-  const token = anyAuth?.token;
-  if (token) cfg.headers.Authorization = `Bearer ${token}`;
-  return cfg;
-});
-
-// exports que seu código espera
 export type Perfil = "CLIENTE" | "AUTONOMO";
+
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+export const API = axios.create({ baseURL: BASE_URL });
 
 export async function apiLogin(login: string, senha: string) {
   const { data } = await API.post("/auth/login", { login, senha });
   return data as { token: string; userId: number; perfil: Perfil };
 }
+
 export async function apiRegister(p: { email?: string; telefone?: string; senha: string; perfil: Perfil; nome: string }) {
   const { data } = await API.post("/auth/register", p);
   return data as { token: string; userId: number; perfil: Perfil };
+}
+
+export async function apiMe(token: string) {
+  const { data } = await API.get("/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+  return data as { userId: number; perfil: Perfil; nome: string };
 }
