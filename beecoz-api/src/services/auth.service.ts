@@ -47,27 +47,20 @@ export async function registerUser(input: {
 
 /** ===== LOGIN ===== */
 export async function loginUser(input: { login: string; senha: string }) {
-  // normaliza ambos SEM depender de "tem @" ou não
   const emailCandidate = normEmail(input.login);
   const phoneCandidate = normPhone(input.login);
 
   const OR: any[] = [];
   if (emailCandidate) OR.push({ email: emailCandidate });
   if (phoneCandidate) OR.push({ telefone: phoneCandidate });
-
   if (OR.length === 0) throw new Error("Informe um email ou telefone válido.");
 
-  // (opcional) debug temporário — remova depois
-  console.log("[auth] login attempt", {
-    raw: input.login,
-    emailCandidate,
-    phoneCandidate,
-  });
+  // debug temporário (veja nos logs do Render para confirmar que esta versão está rodando)
+  console.log("[auth] login attempt", { raw: input.login, emailCandidate, phoneCandidate });
 
   const user = await prisma.login.findFirst({ where: { OR } });
   if (!user) throw new Error("Credenciais inválidas.");
 
-  // lock ativo?
   if (user.lockUntil && user.lockUntil > new Date()) {
     const minutes = Math.ceil((+user.lockUntil - Date.now()) / 60000);
     throw new Error(`Conta temporariamente bloqueada. Tente em ${minutes} min.`);
@@ -77,17 +70,17 @@ export async function loginUser(input: { login: string; senha: string }) {
   if (!ok) {
     const attempts = (user.failedAttempts ?? 0) + 1;
     let lockUntil: Date | null = null;
-    if (attempts >= MAX_ATTEMPTS) lockUntil = new Date(Date.now() + LOCK_MINUTES * 60000);
+    if (attempts >= 5) lockUntil = new Date(Date.now() + 10 * 60000);
     await prisma.login.update({ where: { id: user.id }, data: { failedAttempts: attempts, lockUntil } });
     throw new Error("Credenciais inválidas.");
   }
 
-  // reset tentativas
   await prisma.login.update({ where: { id: user.id }, data: { failedAttempts: 0, lockUntil: null } });
 
   const token = signToken(user.id, user.perfil);
   return { token, userId: user.id, perfil: user.perfil };
 }
+
 
 
 /** ===== ME ===== */
