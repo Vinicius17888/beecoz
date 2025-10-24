@@ -1,78 +1,97 @@
-﻿import { Perfil } from "@prisma/client";
+﻿import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { prisma } from "../prisma/client";
-import { comparePassword, hashPassword, randomToken, sha256 } from "../utils/crypto";
-import { signJwt } from "../utils/jwt";
+import { Perfil } from "@prisma/client";
+import { normEmail, normPhone } from "../utils/normalize";
 
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+const TOKEN_TTL = "7d";
+
+// Bloqueio simples após N tentativas
+const MAX_ATTEMPTS = 5;
 const LOCK_MINUTES = 10;
-const MAX_FAILS = 5;
 
-export async function register(data: {
-  email?: string; telefone?: string; senha: string; perfil: Perfil; nome: string;
-}) {
-  if (!data.email && !data.telefone) throw new Error("Informe email ou telefone.");
-  const exists = await prisma.login.findFirst({ where: { OR: [{ email: data.email }, { telefone: data.telefone }] } });
-  if (exists) throw new Error("Já existe usuário com esse email/telefone.");
-
-  const senhaHash = await hashPassword(data.senha);
-  const login = await prisma.login.create({
-    data: { email: data.email, telefone: data.telefone, senhaHash, perfil: data.perfil }
-  });
-
-  if (data.perfil === "CLIENTE") {
-    await prisma.cliente.create({ data: { loginId: login.id, nome: data.nome } });
-  } else {
-    await prisma.autonomo.create({ data: { loginId: login.id, nome: data.nome } });
-  }
-
-  const token = signJwt({ sub: login.id, perfil: login.perfil });
-  return { token, userId: login.id, perfil: login.perfil };
+function signToken(userId: number, perfil: Perfil) {
+  return jwt.sign({ userId, perfil }, JWT_SECRET, { expiresIn: TOKEN_TTL });
 }
 
-export async function login({ login, senha }: { login: string; senha: string; }) {
-  const where = login.includes("@") ? { email: login } : { telefone: login };
-  const user = await prisma.login.findFirst({ where });
-  if (!user) throw new Error("Credenciais inválidas.");
+export async function registerUser(input: {
+  perfil: Perfil | "CLIENTE" | "AUTONOMO";
+  nome: string;
+  email?: string;
+  telefone?: string;
+  senha: string;
+}) {
+  const email = normEmail(input.email);
+  const telefone = normPhone(input.telefone);
+  if (!email && !telefone) throw new Error("Informe email ou telefone.");
 
-  if (user.lockUntil && user.lockUntil > new Date()) {
-    throw new Error("Conta temporariamente bloqueada. Tente novamente mais tarde.");
-  }
+  const senhaHash = await bcrypt.hash(input.senha, 10);
 
-  const ok = await comparePassword(senha, user.senhaHash);
-  if (!ok) {
-    const fails = user.failedAttempts + 1;
-    const lockUntil = fails >= MAX_FAILS ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000) : null;
-    await prisma.login.update({ where: { id: user.id }, data: { failedAttempts: fails, lockUntil } });
-    throw new Error("Credenciais inválidas.");
-  }
+  const user = await prisma.login.create({
+    data: {
+      email,
+      telefone,
+      senhaHash,
+      perfil: input.perfil as Perfil,
+      Cliente: input.perfil === "CLIENTE" ? { create: { nome: input.nome } } : undefined,
+      Autonomo: input.perfil === "AUTONOMO" ? { create: { nome: input.nome } } : undefined,
+    },
+  });
 
-  await prisma.login.update({ where: { id: user.id }, data: { failedAttempts: 0, lockUntil: null } });
-  const token = signJwt({ sub: user.id, perfil: user.perfil });
+  const token = signToken(user.id, user.perfil);
   return { token, userId: user.id, perfil: user.perfil };
 }
 
-export async function requestPasswordReset(identifier: string) {
-  const where = identifier.includes("@") ? { email: identifier } : { telefone: identifier };
-  const user = await prisma.login.findFirst({ where });
-  if (!user) return;
+export async function loginUser(input: { login: string; senha: string }) {
+  const isEmail = input.login.includes("@");
+  const email = isEmail ? normEmail(input.login) : null;
+  const telefone = isEmail ? null : normPhone(input.login);
 
-  const raw = randomToken(32);
-  const tokenHash = sha256(raw);
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+  const user = await prisma.login.findFirst({
+    where: {
+      OR: [{ email: email ?? undefined }, { telefone: telefone ?? undefined }],
+    },
+  });
 
-  await prisma.passwordReset.create({ data: { loginId: user.id, tokenHash, expiresAt } });
-  // Em produção: enviar "raw" por email/SMS. Para testes locais retornamos:
-  return { resetToken: raw };
+  if (!user) throw new Error("Credenciais inválidas.");
+
+  // lock
+  if (user.lockUntil && user.lockUntil > new Date()) {
+    const minutes = Math.ceil((+user.lockUntil - Date.now()) / 60000);
+    throw new Error(`Conta temporariamente bloqueada. Tente em ${minutes} min.`);
+  }
+
+  const ok = await bcrypt.compare(input.senha, user.senhaHash);
+  if (!ok) {
+    const attempts = (user.failedAttempts ?? 0) + 1;
+    let lockUntil: Date | null = null;
+    if (attempts >= MAX_ATTEMPTS) {
+      lockUntil = new Date(Date.now() + LOCK_MINUTES * 60000);
+    }
+    await prisma.login.update({
+      where: { id: user.id },
+      data: { failedAttempts: attempts, lockUntil },
+    });
+    throw new Error("Credenciais inválidas.");
+  }
+
+  // reset contador
+  await prisma.login.update({
+    where: { id: user.id },
+    data: { failedAttempts: 0, lockUntil: null },
+  });
+
+  const token = signToken(user.id, user.perfil);
+  return { token, userId: user.id, perfil: user.perfil };
 }
 
-export async function resetPassword(rawToken: string, newPassword: string) {
-  const tokenHash = sha256(rawToken);
-  const pr = await prisma.passwordReset.findFirst({
-    where: { tokenHash, used: false, expiresAt: { gt: new Date() } }
-  });
-  if (!pr) throw new Error("Token inválido ou expirado.");
-
-  await prisma.$transaction([
-    prisma.passwordReset.update({ where: { id: pr.id }, data: { used: true } }),
-    prisma.login.update({ where: { id: pr.loginId }, data: { senhaHash: await hashPassword(newPassword) } })
-  ]);
+export async function me(userId: number) {
+  const user = await prisma.login.findUnique({ where: { id: userId }, include: { Cliente: true, Autonomo: true } });
+  if (!user) throw new Error("Usuário não encontrado.");
+  return {
+    userId: user.id,
+    perfil: user.perfil,
+    nome: user.Cliente?.nome ?? user.Autonomo?.nome ?? "",
+  };
 }
