@@ -3,7 +3,7 @@ import Button from "@components/Button";
 import { theme } from "@theme";
 import logo from "@assets/logo.png";
 import { useCadastro } from "@lib/cadastroStore";
-import { apiRegister, apiUpdateAutonomo } from "@lib/api";
+import { apiRegister, apiUpdateAutonomo, apiLogin } from "@lib/api";
 import { useAuth } from "@lib/authStore";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -20,26 +20,46 @@ export default function FinalizadoAutonomo(){
         Alert.alert("Dados incompletos", "Volte e preencha os campos obrigatórios.");
         return;
       }
-      // cria login
-      const res = await apiRegister({
-        perfil: "AUTONOMO",
-        nome: autonomo.nome,
-        email: autonomo.email,
-        telefone: autonomo.telefone,
-        senha: autonomo.senha
-      });
-      setSession(res.token, res.userId, res.perfil);
-      // completa perfil
-      await apiUpdateAutonomo(res.token, {
-        nome: autonomo.nome,
-        cpf: autonomo.cpf,
-        cnpj: autonomo.cnpj,
-        area: autonomo.area
-      });
+
+      let token: string, userId: number, perfil: "CLIENTE" | "AUTONOMO";
+      try {
+        const res = await apiRegister({
+          perfil: "AUTONOMO",
+          nome: autonomo.nome,
+          email: autonomo.email,
+          telefone: autonomo.telefone,
+          senha: autonomo.senha,
+        });
+        ({ token, userId, perfil } = res);
+      } catch (e:any) {
+        const status = e?.response?.status;
+        const msg = String(e?.message || "");
+        if (status === 409 || /unique|existe|duplicad/i.test(msg)) {
+          const loginId = autonomo.email || autonomo.telefone || "";
+          const res = await apiLogin(loginId, autonomo.senha!);
+          ({ token, userId, perfil } = res);
+        } else {
+          throw e;
+        }
+      }
+
+      setSession(token, userId, perfil as any);
+
+      try {
+        await apiUpdateAutonomo(token, {
+          nome: autonomo.nome,
+          cpf: autonomo.cpf,
+          cnpj: autonomo.cnpj,
+          area: autonomo.area,
+          cidade: autonomo.cidade,
+          estado: autonomo.estado,
+        });
+      } catch {}
+
       reset();
       router.replace("/(autonomo)");
     } catch (e:any) {
-      Alert.alert("Falha no cadastro", e?.response?.data?.message ?? "Tente novamente.");
+      Alert.alert("Falha no cadastro", e?.message || "Tente novamente.");
     } finally { setLoading(false); }
   }
 
@@ -47,7 +67,7 @@ export default function FinalizadoAutonomo(){
     <View style={{flex:1,backgroundColor:theme.bg,justifyContent:"center",alignItems:"center",padding:16}}>
       <Image source={logo} style={{ width:96, height:96, marginBottom:16 }} />
       <Text style={{ color: theme.text, textAlign:"center", marginBottom: 24 }}>
-        Os dados apresentados estão em análise. Quando analisarmos estes, enviaremos uma mensagem ao e-mail informado no cadastro.
+        Tudo pronto! Clique em “Início” para entrar no app.
       </Text>
       <Button onPress={concluir} disabled={loading}>{loading ? "Enviando..." : "Início"}</Button>
     </View>

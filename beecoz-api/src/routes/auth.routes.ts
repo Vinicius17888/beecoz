@@ -20,7 +20,12 @@ router.post("/register", async (req, res) => {
     const result = await registerUser(parsed.data);
     return res.json(result);
   } catch (e: any) {
-    return res.status(400).json({ message: e.message });
+    const msg = String(e?.message || "");
+    // Prisma unique (P2002) ou mensagens de duplicidade
+    if (msg.includes("P2002") || /unique|existe|duplicad/i.test(msg)) {
+      return res.status(409).json({ message: "Já existe uma conta com esse e-mail ou telefone." });
+    }
+    return res.status(400).json({ message: msg || "Falha no cadastro." });
   }
 });
 
@@ -33,7 +38,7 @@ router.post("/login", async (req, res) => {
     const result = await loginUser(parsed.data);
     return res.json(result);
   } catch (e: any) {
-    return res.status(401).json({ message: e.message });
+    return res.status(401).json({ message: e.message || "Credenciais inválidas." });
   }
 });
 
@@ -43,7 +48,7 @@ router.get("/me", requireAuth, async (req, res) => {
     const data = await me(userId);
     return res.json(data);
   } catch (e: any) {
-    return res.status(401).json({ message: e.message });
+    return res.status(401).json({ message: e.message || "Não autorizado." });
   }
 });
 
