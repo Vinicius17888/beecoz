@@ -3,7 +3,7 @@ import Button from "@components/Button";
 import { theme } from "@theme";
 import logo from "@assets/logo.png";
 import { useCadastro } from "@lib/cadastroStore";
-import { apiRegister } from "@lib/api";
+import { apiRegister, apiUpdateAutonomo } from "@lib/api";
 import { useAuth } from "@lib/authStore";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -16,10 +16,11 @@ export default function FinalizadoAutonomo(){
   async function concluir() {
     try {
       setLoading(true);
-      if(!autonomo.nome || !(autonomo.email || autonomo.telefone) || !autonomo.senha){
-        Alert.alert("Dados incompletos", "Preencha nome, email/telefone e senha nas etapas anteriores.");
+      if(!autonomo.nome || !(autonomo.email || autonomo.telefone) || !autonomo.senha) {
+        Alert.alert("Dados incompletos", "Volte e preencha os campos obrigatórios.");
         return;
       }
+      // cria login
       const res = await apiRegister({
         perfil: "AUTONOMO",
         nome: autonomo.nome,
@@ -28,22 +29,27 @@ export default function FinalizadoAutonomo(){
         senha: autonomo.senha
       });
       setSession(res.token, res.userId, res.perfil);
+      // completa perfil
+      await apiUpdateAutonomo(res.token, {
+        nome: autonomo.nome,
+        cpf: autonomo.cpf,
+        cnpj: autonomo.cnpj,
+        area: autonomo.area
+      });
       reset();
       router.replace("/(autonomo)");
-    } catch (e: any) {
-      Alert.alert("Falha no cadastro", e?.response?.data?.message ?? "Tente novamente mais tarde.");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e:any) {
+      Alert.alert("Falha no cadastro", e?.response?.data?.message ?? "Tente novamente.");
+    } finally { setLoading(false); }
   }
 
   return (
     <View style={{flex:1,backgroundColor:theme.bg,justifyContent:"center",alignItems:"center",padding:16}}>
-      <Image source={logo} style={{width:96,height:96,marginBottom:16}}/>
-      <Text style={{color:theme.text,textAlign:"center",marginBottom:24}}>
-        Revise seus dados. Ao confirmar, sua conta de Autônomo será criada e você irá para a Home do Autônomo.
+      <Image source={logo} style={{ width:96, height:96, marginBottom:16 }} />
+      <Text style={{ color: theme.text, textAlign:"center", marginBottom: 24 }}>
+        Os dados apresentados estão em análise. Quando analisarmos estes, enviaremos uma mensagem ao e-mail informado no cadastro.
       </Text>
-      <Button onPress={concluir} disabled={loading}>{loading ? "Enviando..." : "Concluir cadastro"}</Button>
+      <Button onPress={concluir} disabled={loading}>{loading ? "Enviando..." : "Início"}</Button>
     </View>
   );
 }

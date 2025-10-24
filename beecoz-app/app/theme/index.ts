@@ -1,23 +1,23 @@
 export const theme = {
+  // paleta aproximada do figma
   colors: {
-    primary: "#F1B82D",
-    primaryDark: "#C9961F",
-    bg: "#0B0B0B",
-    text: "#FFFFFF",
-    muted: "#9AA0A6",
-    border: "#2A2A2A",
+    bg: "#2F3338",           // fundo
+    surface: "#3A3F45",      // cards/inputs
+    border: "#4A4F56",
+    text: "#F5F7FA",
+    muted: "#A9B0B6",
+    primary: "#F1B82D",      // amarelo
+    primaryDark: "#D9A51F",
     danger: "#E53935",
-    success: "#2E7D32"
   },
-  // atalhos para compatibilidade com telas antigas:
-  bg: "#0B0B0B",
-  text: "#FFFFFF",
+  // atalhos para compat com telas antigas
+  bg: "#2F3338",
+  text: "#F5F7FA",
 
-  spacing: (n: number) => 4 * n,
   radius: { sm: 8, md: 12, lg: 16, xl: 20 },
+  spacing: (n: number) => 4 * n,
   typography: {
-    h1: { fontSize: 28, fontWeight: "700" as const },
-    h2: { fontSize: 22, fontWeight: "700" as const },
-    body: { fontSize: 16, fontWeight: "400" as const }
-  }
+    h1: { fontSize: 22, fontWeight: "700" as const },
+    body: { fontSize: 16, fontWeight: "400" as const },
+  },
 };

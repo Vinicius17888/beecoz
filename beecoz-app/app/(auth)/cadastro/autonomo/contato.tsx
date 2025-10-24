@@ -1,29 +1,30 @@
-﻿import { View, Text, StyleSheet, Switch } from "react-native";
-import HeaderBack from "@components/HeaderBack";
-import Input from "@components/Input";
+﻿import AppBarBack from "@components/AppBarBack";
+import FormField from "@components/FormField";
 import Button from "@components/Button";
 import { theme } from "@theme";
-import { useState } from "react";
+import { View } from "react-native";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { contatoSchema } from "@lib/schemas";
+import { useCadastro } from "@lib/cadastroStore";
 import { router } from "expo-router";
 
 export default function AutonomoContato(){
-  const [email,setEmail]=useState(""); const [usaTelefone,setUsaTelefone]=useState(false); const [tel,setTel]=useState("");
+  const { autonomo, setAutonomo } = useCadastro();
+  const { control, handleSubmit } = useForm({
+    resolver: zodResolver(contatoSchema),
+    defaultValues: { email: autonomo.email || "", telefone: autonomo.telefone || "" }
+  });
+  const onSubmit = (v:any)=>{ setAutonomo(v); router.push("/cadastro/autonomo/senha"); };
+
   return (
-    <View style={s.c}>
-      <HeaderBack />
-      <View style={s.body}>
-        <Text style={s.h1}>Muito bem, <Text style={{color:theme.primary}}>Thiago</Text>!</Text>
-        <Text style={s.p}>Informe seu melhor <Text style={{fontWeight:"800"}}>email</Text> ou seu <Text style={{fontWeight:"800"}}>telefone</Text>.</Text>
-        <Input placeholder="email@dominio.com" value={email} onChangeText={setEmail}/>
-        <View style={{flexDirection:"row",alignItems:"center",gap:8}}>
-          <Switch value={usaTelefone} onValueChange={setUsaTelefone}/>
-          <Text style={{color:theme.text}}>registrar com meu número</Text>
-        </View>
-        {usaTelefone && <Input placeholder="(00) 00000-0000" value={tel} onChangeText={setTel}/>}
-      </View>
-      <Button title="Continuar" style={s.fab} onPress={()=>router.push("/(auth)/cadastro/autonomo/senha")} />
+    <View style={{ flex:1, backgroundColor: theme.bg, padding: 16 }}>
+      <AppBarBack title="Informe seu e-mail ou telefone" />
+      <FormField control={control} name="email" inputProps={{ placeholder:"email@exemplo.com", autoCapitalize:"none", keyboardType:"email-address" }}/>
+      <FormField control={control} name="telefone" inputProps={{ placeholder:"(00) 00000-0000", keyboardType:"phone-pad" }}/>
+      <Button onPress={handleSubmit(onSubmit)} style={{ position:"absolute", left:16, right:16, bottom:16 }}>
+        Continuar
+      </Button>
     </View>
   );
 }
-const s=StyleSheet.create({ c:{flex:1,backgroundColor:theme.bg}, body:{padding:16,gap:12}, h1:{color:theme.text,fontWeight:"800"}, p:{color:theme.sub}, fab:{position:"absolute",left:16,right:16,bottom:16} });
-

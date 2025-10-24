@@ -1,24 +1,30 @@
-﻿import { View, Text, StyleSheet } from "react-native";
-import HeaderBack from "@components/HeaderBack";
-import Input from "@components/Input";
+﻿import AppBarBack from "@components/AppBarBack";
+import FormField from "@components/FormField";
 import Button from "@components/Button";
 import { theme } from "@theme";
-import { useState } from "react";
+import { View } from "react-native";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { senhaSchema } from "@lib/schemas";
+import { useCadastro } from "@lib/cadastroStore";
 import { router } from "expo-router";
 
 export default function AutonomoSenha(){
-  const [senha,setSenha]=useState("");
+  const { autonomo, setAutonomo } = useCadastro();
+  const { control, handleSubmit } = useForm({
+    resolver: zodResolver(senhaSchema),
+    defaultValues: { senha: autonomo.senha || "", senha2: autonomo.senha || "" }
+  });
+  const onSubmit = (v:any)=>{ setAutonomo({ senha: v.senha }); router.push("/cadastro/autonomo/endereco"); };
+
   return (
-    <View style={s.c}>
-      <HeaderBack />
-      <View style={s.body}>
-        <Text style={s.h1}>Ok, quase lá!</Text>
-        <Text style={s.p}>Agora, crie uma <Text style={{fontWeight:"800"}}>senha</Text>:</Text>
-        <Input placeholder="********" secureTextEntry value={senha} onChangeText={setSenha}/>
-      </View>
-      <Button title="Continuar" style={s.fab} onPress={()=>router.push("/(auth)/cadastro/autonomo/endereco")} />
+    <View style={{ flex:1, backgroundColor: theme.bg, padding: 16 }}>
+      <AppBarBack title="Crie uma senha" />
+      <FormField control={control} name="senha"  inputProps={{ placeholder:"******", secureTextEntry:true }}/>
+      <FormField control={control} name="senha2" inputProps={{ placeholder:"Repita a senha", secureTextEntry:true }}/>
+      <Button onPress={handleSubmit(onSubmit)} style={{ position:"absolute", left:16, right:16, bottom:16 }}>
+        Continuar
+      </Button>
     </View>
   );
 }
-const s=StyleSheet.create({ c:{flex:1,backgroundColor:theme.bg}, body:{padding:16,gap:12}, h1:{color:theme.text,fontWeight:"800"}, p:{color:theme.sub}, fab:{position:"absolute",left:16,right:16,bottom:16} });
-

@@ -1,24 +1,29 @@
-﻿import { View, Text, StyleSheet } from "react-native";
-import HeaderBack from "@components/HeaderBack";
-import Input from "@components/Input";
+﻿import AppBarBack from "@components/AppBarBack";
+import FormField from "@components/FormField";
 import Button from "@components/Button";
 import { theme } from "@theme";
-import { useState } from "react";
+import { View } from "react-native";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { nomeSchema } from "@lib/schemas";
+import { useCadastro } from "@lib/cadastroStore";
 import { router } from "expo-router";
 
 export default function AutonomoNome(){
-  const [nome,setNome] = useState("");
+  const { autonomo, setAutonomo } = useCadastro();
+  const { control, handleSubmit } = useForm({
+    resolver: zodResolver(nomeSchema),
+    defaultValues: { nome: autonomo.nome }
+  });
+  const onSubmit = (v:any)=>{ setAutonomo(v); router.push("/cadastro/autonomo/contato"); };
+
   return (
-    <View style={s.c}>
-      <HeaderBack />
-      <View style={s.body}>
-        <Text style={s.h1}>Bem-vindo à <Text style={{color:theme.primary}}>Beecoz</Text>!</Text>
-        <Text style={s.p}>Para começar, qual <Text style={{fontWeight:"800"}}>seu nome</Text>?</Text>
-        <Input value={nome} onChangeText={setNome} placeholder="Seu nome"/>
-      </View>
-      <Button title="Continuar" style={s.fab} onPress={()=>router.push("/(auth)/cadastro/autonomo/contato")} />
+    <View style={{ flex:1, backgroundColor: theme.bg, padding: 16 }}>
+      <AppBarBack title="Bem-vindo à Beecoz! Qual seu nome?" />
+      <FormField control={control} name="nome" inputProps={{ placeholder:"Seu nome" }}/>
+      <Button onPress={handleSubmit(onSubmit)} style={{ position:"absolute", left:16, right:16, bottom:16 }}>
+        Continuar
+      </Button>
     </View>
   );
 }
-const s=StyleSheet.create({ c:{flex:1,backgroundColor:theme.bg}, body:{padding:16,gap:12}, h1:{color:theme.text,fontWeight:"800"}, p:{color:theme.sub}, fab:{position:"absolute", left:16, right:16, bottom:16} });
-

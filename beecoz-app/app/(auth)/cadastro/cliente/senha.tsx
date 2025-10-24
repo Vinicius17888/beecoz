@@ -1,34 +1,25 @@
-﻿import { View, Text, StyleSheet } from "react-native";
-import HeaderBack from "../../../components/HeaderBack";
-import Button from "../../../components/Button";
-import { TextField } from "../../../components/TextField";
-import { theme } from "../../../theme/theme";
+﻿import AppBarBack from "@components/AppBarBack";
+import FormField from "@components/FormField";
+import Button from "@components/Button";
+import { senhaSchema } from "@lib/schemas";
+import { useCadastro } from "@lib/cadastroStore";
+import { View } from "react-native";
+import { theme } from "@theme";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
-import { useCadastro } from "../../../lib/cadastroStore";
-import { senhaSchema } from "../../../lib/validate";
 
-export default function SenhaCliente(){
-  const { set } = useCadastro();
-  const [senha, setSenha] = useState("");
-
-  function next(){
-    const ok = senhaSchema.safeParse(senha);
-    if(!ok.success) return alert(ok.error.issues[0].message);
-    set({ senha });
-    router.push("./endereco"); // navegação RELATIVA
-  }
+export default function ClienteSenha(){
+  const { cliente, setCliente } = useCadastro();
+  const { control, handleSubmit } = useForm({ resolver: zodResolver(senhaSchema), defaultValues: { senha: cliente.senha || "", senha2: cliente.senha || "" } });
+  const onSubmit = (v:any)=>{ setCliente({ senha: v.senha }); router.push("/cadastro/cliente/endereco"); };
 
   return (
-    <View style={s.c}>
-      <HeaderBack />
-      <Text style={s.h1}>Crie uma senha</Text>
-      <TextField placeholder="Sua senha" value={senha} onChangeText={setSenha} secureTextEntry/>
-      <Button title="Continuar" onPress={next} />
+    <View style={{ flex:1, backgroundColor: theme.bg, padding: 16 }}>
+      <AppBarBack title="Crie uma senha" />
+      <FormField control={control} name="senha"  inputProps={{ placeholder:"******", secureTextEntry:true }}/>
+      <FormField control={control} name="senha2" inputProps={{ placeholder:"Repita a senha", secureTextEntry:true }}/>
+      <Button onPress={handleSubmit(onSubmit)} style={{ position:"absolute", left:16, right:16, bottom:16 }}>Continuar</Button>
     </View>
   );
 }
-const s=StyleSheet.create({
-  c:{flex:1,backgroundColor:theme.bg,padding:16},
-  h1:{color:"#fff",fontSize:16,marginBottom:12}
-});

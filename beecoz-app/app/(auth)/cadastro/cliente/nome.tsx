@@ -1,34 +1,24 @@
-﻿import { View, Text, StyleSheet } from "react-native";
-import HeaderBack from "../../../components/HeaderBack";
-import Button from "../../../components/Button";
-import { TextField } from "../../../components/TextField";
-import { theme } from "../../../theme/theme";
+﻿import AppBarBack from "@components/AppBarBack";
+import FormField from "@components/FormField";
+import Button from "@components/Button";
+import { theme } from "@theme";
+import { View } from "react-native";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { nomeSchema } from "@lib/schemas";
+import { useCadastro } from "@lib/cadastroStore";
 import { router } from "expo-router";
-import { useState } from "react";
-import { useCadastro } from "../../../lib/cadastroStore";
-import { nomeSchema } from "../../../lib/validate";
 
-export default function NomeCliente(){
-  const { set } = useCadastro();
-  const [nome, setNome] = useState("");
-
-  function next(){
-    const ok = nomeSchema.safeParse(nome);
-    if(!ok.success) return alert(ok.error.issues[0].message);
-    set({ nome });
-    router.push("/(auth)/cadastro/cliente/contato");
-  }
+export default function ClienteNome(){
+  const { cliente, setCliente } = useCadastro();
+  const { control, handleSubmit } = useForm({ resolver: zodResolver(nomeSchema), defaultValues: { nome: cliente.nome }});
+  const onSubmit = (v:any)=>{ setCliente(v); router.push("/cadastro/cliente/contato"); };
 
   return (
-    <View style={s.c}>
-      <HeaderBack />
-      <Text style={s.h1}>Bem-vindo à Beecoz!{"\n"}Qual seu nome?</Text>
-      <TextField placeholder="Seu nome" value={nome} onChangeText={setNome}/>
-      <Button title="Continuar" onPress={next} />
+    <View style={{ flex:1, backgroundColor: theme.bg, padding: 16 }}>
+      <AppBarBack title="Bem-vindo à Beecoz! Para começar, qual seu nome?" />
+      <FormField control={control} name="nome" inputProps={{ placeholder:"Seu nome" }}/>
+      <Button onPress={handleSubmit(onSubmit)} style={{ position:"absolute", left:16, right:16, bottom:16 }}>Continuar</Button>
     </View>
   );
 }
-const s=StyleSheet.create({
-  c:{flex:1,backgroundColor:theme.bg,padding:16},
-  h1:{color:"#fff",fontSize:18,marginBottom:12}
-});

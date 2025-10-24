@@ -39,6 +39,10 @@ model Cliente {
   loginId   Int     @unique
   nome      String
   genero    String?
+  cpf       String? @unique
+  estado    String?
+  cidade    String?
+  // docs (futuro): docRgUrl, compUrl, selfieUrl
   Login     Login   @relation(fields: [loginId], references: [id], onDelete: Cascade)
 }
 
@@ -47,7 +51,10 @@ model Autonomo {
   loginId   Int     @unique
   nome      String
   area      String?
-  nivel     Int     @default(1)
+  cpf       String?
+  cnpj      String? @unique
+  estado    String?
+  cidade    String?
   Login     Login   @relation(fields: [loginId], references: [id], onDelete: Cascade)
 }
 
