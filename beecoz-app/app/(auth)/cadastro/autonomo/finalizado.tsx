@@ -8,6 +8,9 @@ import { useAuth } from "@lib/authStore";
 import { router } from "expo-router";
 import { useState } from "react";
 
+function onlyDigits(s?: string) { return (s ?? "").replace(/\D/g, ""); }
+function normEmail(s?: string) { return (s ?? "").trim().toLowerCase(); }
+
 export default function FinalizadoAutonomo(){
   const { autonomo, reset } = useCadastro();
   const { setSession } = useAuth();
@@ -22,22 +25,48 @@ export default function FinalizadoAutonomo(){
       }
 
       let token: string, userId: number, perfil: "CLIENTE" | "AUTONOMO";
+
       try {
         const res = await apiRegister({
           perfil: "AUTONOMO",
           nome: autonomo.nome,
-          email: autonomo.email,
-          telefone: autonomo.telefone,
+          email: normEmail(autonomo.email!),
+          telefone: onlyDigits(autonomo.telefone),
           senha: autonomo.senha,
         });
         ({ token, userId, perfil } = res);
       } catch (e:any) {
         const status = e?.response?.status;
         const msg = String(e?.message || "");
+
         if (status === 409 || /unique|existe|duplicad/i.test(msg)) {
-          const loginId = autonomo.email || autonomo.telefone || "";
-          const res = await apiLogin(loginId, autonomo.senha!);
-          ({ token, userId, perfil } = res);
+          const candidates = Array.from(new Set([
+            onlyDigits(autonomo.telefone),
+            autonomo.telefone || "",
+            normEmail(autonomo.email!),
+          ])).filter(Boolean);
+
+          let ok = false;
+          for (const login of candidates) {
+            try {
+              const res = await apiLogin(login, autonomo.senha!);
+              ({ token, userId, perfil } = res);
+              ok = true;
+              break;
+            } catch {}
+          }
+          if (!ok) {
+            Alert.alert(
+              "Conta já existe",
+              "Não conseguimos entrar com a senha informada. Você pode tentar fazer login ou recuperar a senha.",
+              [
+                { text: "Login", onPress: () => router.replace("/login") },
+                // { text: "Recuperar senha", onPress: () => router.push(`/recuperar-senha?login=${encodeURIComponent(candidates[0] || "")}`) },
+                { text: "Cancelar", style: "cancel" }
+              ]
+            );
+            return;
+          }
         } else {
           throw e;
         }
