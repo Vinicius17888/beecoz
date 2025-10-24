@@ -47,13 +47,24 @@ export async function registerUser(input: {
 
 /** ===== LOGIN ===== */
 export async function loginUser(input: { login: string; senha: string }) {
-  const isEmail = input.login.includes("@");
-  const email = isEmail ? normEmail(input.login) : null;
-  const telefone = isEmail ? null : normPhone(input.login);
+  // normaliza ambos SEM depender de "tem @" ou não
+  const emailCandidate = normEmail(input.login);
+  const phoneCandidate = normPhone(input.login);
 
-  const user = await prisma.login.findFirst({
-    where: { OR: [{ email: email ?? undefined }, { telefone: telefone ?? undefined }] },
+  const OR: any[] = [];
+  if (emailCandidate) OR.push({ email: emailCandidate });
+  if (phoneCandidate) OR.push({ telefone: phoneCandidate });
+
+  if (OR.length === 0) throw new Error("Informe um email ou telefone válido.");
+
+  // (opcional) debug temporário — remova depois
+  console.log("[auth] login attempt", {
+    raw: input.login,
+    emailCandidate,
+    phoneCandidate,
   });
+
+  const user = await prisma.login.findFirst({ where: { OR } });
   if (!user) throw new Error("Credenciais inválidas.");
 
   // lock ativo?
@@ -77,6 +88,7 @@ export async function loginUser(input: { login: string; senha: string }) {
   const token = signToken(user.id, user.perfil);
   return { token, userId: user.id, perfil: user.perfil };
 }
+
 
 /** ===== ME ===== */
 export async function me(userId: number) {
