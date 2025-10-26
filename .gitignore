@@ -22,5 +22,5 @@ Thumbs.db
 # Env & secrets
 .env
 .env.*
-beecoz-api/.env
-beecoz-app/.env
+# beecoz-api/.env
+# beecoz-app/.env
