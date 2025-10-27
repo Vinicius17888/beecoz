@@ -33,6 +33,7 @@ Crie beecoz-api/.env com:
 ## Postgres (Neon)
 ```
 DATABASE_URL="postgresql://neondb_owner:npg_rf69xHJvITPq@ep-red-dew-adlwdqi5-pooler.c-2.us-east-1.aws.neon.tech/beecoz?sslmode=require&channel_binding=require"
+DIRECT_URL="postgresql://neondb_owner:npg_rf69xHJvITPq@ep-red-dew-adlwdqi5.c-2.us-east-1.aws.neon.tech/beecoz?sslmode=require&channel_binding=require"
 ```
 
 ## JWT
